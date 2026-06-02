@@ -1,6 +1,6 @@
 # model-showdown
 
-Model comparison pipeline for [nexus-agents](https://github.com/williamzujkowski/nexus-agents). Evaluates how different AI models and voting strategies handle the same task.
+Model comparison pipeline for [nexus-agents](https://github.com/nexus-substrate/nexus-agents). Evaluates how different AI models and voting strategies handle the same task.
 
 ## Pipeline
 
