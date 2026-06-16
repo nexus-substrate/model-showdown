@@ -6,7 +6,6 @@
 
 import type {
   DelegateResponse,
-  ListExpertsResponse,
   CreateExpertResponse,
   ExecuteExpertResponse,
   VoteResponse,
@@ -50,25 +49,6 @@ export const MOCK_DELEGATE_WITH_GOVERNANCE: DelegateResponse = {
     votingThreshold: 'supermajority',
     promotionReason: 'Security-related task requires elevated consensus',
   },
-};
-
-// ============================================================================
-// list_experts
-// ============================================================================
-
-export const MOCK_LIST_EXPERTS: ListExpertsResponse = {
-  experts: [
-    { role: 'code_expert', name: 'Code Expert', description: 'Senior software engineer.', capabilities: ['task_execution', 'code_generation', 'code_review', 'tool_use', 'collaboration'] },
-    { role: 'architecture_expert', name: 'Architecture Expert', description: 'Software architect.', capabilities: ['task_execution', 'research', 'collaboration'] },
-    { role: 'security_expert', name: 'Security Expert', description: 'Security engineer.', capabilities: ['task_execution', 'code_review', 'research'] },
-    { role: 'testing_expert', name: 'Testing Expert', description: 'QA engineer.', capabilities: ['task_execution', 'code_generation', 'code_review', 'tool_use'] },
-    { role: 'documentation_expert', name: 'Documentation Expert', description: 'Technical writer.', capabilities: ['task_execution', 'research', 'tool_use'] },
-    { role: 'devops_expert', name: 'DevOps/SRE Expert', description: 'DevOps engineer.', capabilities: ['task_execution', 'code_generation', 'tool_use', 'collaboration'] },
-    { role: 'research_expert', name: 'Research Expert', description: 'Research expert.', capabilities: ['task_execution', 'research', 'collaboration'] },
-    { role: 'pm_expert', name: 'Product Manager Expert', description: 'Product manager.', capabilities: ['task_execution', 'collaboration', 'research'] },
-    { role: 'ux_expert', name: 'UX Designer Expert', description: 'UX designer.', capabilities: ['task_execution', 'collaboration', 'research'] },
-  ],
-  count: 9,
 };
 
 // ============================================================================
