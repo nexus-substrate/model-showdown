@@ -13,6 +13,8 @@ import {
   toStrategyResult,
   computeAgreement,
   runShowdown,
+  withTimeout,
+  ToolCallTimeoutError,
 } from './pipeline.js';
 import type { ShowdownConfig, VotingStrategy } from './types.js';
 import {
@@ -269,5 +271,51 @@ describe('runShowdown', () => {
       'proof_of_learning',
       'higher_order',
     ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// withTimeout
+// ---------------------------------------------------------------------------
+
+describe('withTimeout', () => {
+  it('rejects with ToolCallTimeoutError when the call never resolves', async () => {
+    const hanging: ToolCaller = {
+      call: () => new Promise<unknown>(() => {}),
+    };
+    const bounded = withTimeout(hanging, 10);
+    await expect(bounded.call('slow_tool', {})).rejects.toBeInstanceOf(ToolCallTimeoutError);
+  });
+
+  it('passes through a fast result', async () => {
+    const fast: ToolCaller = {
+      call: async () => ({ ok: true }),
+    };
+    const bounded = withTimeout(fast, 10_000);
+    await expect(bounded.call('fast_tool', {})).resolves.toEqual({ ok: true });
+  });
+
+  it('propagates an underlying thrown error unchanged', async () => {
+    const original = new Error('boom');
+    const failing: ToolCaller = {
+      call: async () => {
+        throw original;
+      },
+    };
+    const bounded = withTimeout(failing, 10_000);
+    await expect(bounded.call('failing_tool', {})).rejects.toBe(original);
+  });
+
+  it('aborts the signal on timeout', async () => {
+    let capturedSignal: AbortSignal | undefined;
+    const hanging: ToolCaller = {
+      call: (_tool: string, args: Record<string, unknown>) => {
+        capturedSignal = args['signal'] as AbortSignal;
+        return new Promise<unknown>(() => {});
+      },
+    };
+    const bounded = withTimeout(hanging, 10);
+    await expect(bounded.call('slow_tool', {})).rejects.toBeInstanceOf(ToolCallTimeoutError);
+    expect(capturedSignal?.aborted).toBe(true);
   });
 });

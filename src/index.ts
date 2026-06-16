@@ -7,7 +7,6 @@
 export {
   DelegateInputSchema,
   DelegateResponseSchema,
-  ListExpertsResponseSchema,
   CreateExpertInputSchema,
   CreateExpertResponseSchema,
   ExecuteExpertInputSchema,
@@ -19,8 +18,6 @@ export {
 
 export type {
   DelegateResponse,
-  ListExpertsResponse,
-  ExpertInfo,
   CreateExpertResponse,
   ExecuteExpertResponse,
   VoteResponse,
@@ -47,5 +44,3 @@ export type { ToolCaller } from './pipeline.js';
 export { generateReport } from './reporter.js';
 
 export type { ReportFormat } from './reporter.js';
-
-export { createLiveCaller, isLiveMode } from './live-caller.js';

@@ -1,7 +1,7 @@
 /**
  * Zod schemas for model-showdown MCP tool contracts.
  *
- * Covers: delegate_to_model, create_expert, execute_expert, list_experts, consensus_vote
+ * Covers: delegate_to_model, create_expert, execute_expert, consensus_vote
  * Schemas match LIVE tool responses from nexus-agents MCP server.
  */
 
@@ -47,25 +47,6 @@ export const DelegateResponseSchema = z.object({
 });
 
 export type DelegateResponse = z.infer<typeof DelegateResponseSchema>;
-
-// ============================================================================
-// list_experts
-// ============================================================================
-
-const ExpertInfoSchema = z.object({
-  role: z.string(),
-  name: z.string(),
-  description: z.string(),
-  capabilities: z.array(z.string()),
-});
-
-export const ListExpertsResponseSchema = z.object({
-  experts: z.array(ExpertInfoSchema),
-  count: z.number(),
-});
-
-export type ListExpertsResponse = z.infer<typeof ListExpertsResponseSchema>;
-export type ExpertInfo = z.infer<typeof ExpertInfoSchema>;
 
 // ============================================================================
 // create_expert
@@ -194,4 +175,6 @@ export interface ShowdownConfig {
   readonly preferredCapability?: 'reasoning' | 'context' | 'speed' | 'code';
   readonly expertRole?: string;
   readonly strategies?: readonly VotingStrategy[];
+  /** Per-call timeout (ms) for remote tool calls. Omit to use the default. */
+  readonly timeoutMs?: number;
 }

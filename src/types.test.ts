@@ -6,7 +6,6 @@ import { describe, it, expect } from 'vitest';
 import {
   DelegateInputSchema,
   DelegateResponseSchema,
-  ListExpertsResponseSchema,
   CreateExpertInputSchema,
   CreateExpertResponseSchema,
   ExecuteExpertInputSchema,
@@ -19,7 +18,6 @@ import {
   MOCK_DELEGATE_CODEX,
   MOCK_DELEGATE_CLAUDE,
   MOCK_DELEGATE_WITH_GOVERNANCE,
-  MOCK_LIST_EXPERTS,
   MOCK_CREATE_CODE_EXPERT,
   MOCK_CREATE_ARCH_EXPERT,
   MOCK_EXECUTE_CODE,
@@ -84,42 +82,6 @@ describe('DelegateResponseSchema', () => {
     expect(r.success).toBe(true);
     if (r.success) {
       expect(r.data.governance).toBeUndefined();
-    }
-  });
-});
-
-// ============================================================================
-// list_experts
-// ============================================================================
-
-describe('ListExpertsResponseSchema', () => {
-  it('parses full expert list', () => {
-    const r = ListExpertsResponseSchema.safeParse(MOCK_LIST_EXPERTS);
-    expect(r.success).toBe(true);
-    if (r.success) {
-      expect(r.data.count).toBe(9);
-      expect(r.data.experts).toHaveLength(9);
-    }
-  });
-
-  it('contains all expected roles', () => {
-    const r = ListExpertsResponseSchema.safeParse(MOCK_LIST_EXPERTS);
-    expect(r.success).toBe(true);
-    if (r.success) {
-      const roles = r.data.experts.map((e) => e.role);
-      for (const expected of EXPECTED_EXPERT_ROLES) {
-        expect(roles).toContain(expected);
-      }
-    }
-  });
-
-  it('each expert has capabilities', () => {
-    const r = ListExpertsResponseSchema.safeParse(MOCK_LIST_EXPERTS);
-    expect(r.success).toBe(true);
-    if (r.success) {
-      for (const expert of r.data.experts) {
-        expect(expert.capabilities.length).toBeGreaterThan(0);
-      }
     }
   });
 });

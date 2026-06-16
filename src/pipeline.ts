@@ -29,6 +29,46 @@ export interface ToolCaller {
   call(tool: string, args: Record<string, unknown>): Promise<unknown>;
 }
 
+/** Default per-call timeout for remote tool calls (ms). */
+export const DEFAULT_TIMEOUT_MS = 30_000;
+
+/** Error thrown when a tool call exceeds its configured timeout. */
+export class ToolCallTimeoutError extends Error {
+  constructor(toolName: string, timeoutMs: number) {
+    super(`Tool call '${toolName}' timed out after ${timeoutMs}ms`);
+    this.name = 'ToolCallTimeoutError';
+  }
+}
+
+/**
+ * Wrap a ToolCaller so every call is bounded by `timeoutMs`.
+ *
+ * Uses an AbortController (so cooperating callers can cancel in-flight work)
+ * combined with Promise.race, guaranteeing the returned promise settles even
+ * if the underlying call hangs forever.
+ */
+export function withTimeout(
+  caller: ToolCaller,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
+): ToolCaller {
+  return {
+    call(tool: string, args: Record<string, unknown>): Promise<unknown> {
+      const controller = new AbortController();
+      const callArgs = { ...args, signal: controller.signal };
+      return new Promise<unknown>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          controller.abort();
+          reject(new ToolCallTimeoutError(tool, timeoutMs));
+        }, timeoutMs);
+        caller.call(tool, callArgs).then(
+          (value) => { clearTimeout(timer); resolve(value); },
+          (err) => { clearTimeout(timer); reject(err); },
+        );
+      });
+    },
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Step 1: Route task to optimal model
 // ---------------------------------------------------------------------------
@@ -147,19 +187,20 @@ export async function runShowdown(
 ): Promise<ShowdownResult> {
   const errors: string[] = [];
   const strategies = config.strategies ?? VOTING_STRATEGIES;
+  const boundedCaller = withTimeout(caller, config.timeoutMs);
 
   // Step 1: Delegate
-  const delegation = await delegateTask(caller, config.task, config.preferredCapability);
+  const delegation = await delegateTask(boundedCaller, config.task, config.preferredCapability);
 
   // Step 2: Create expert
   const role = config.expertRole ?? inferExpertRole(config.task);
-  const expert = await createExpert(caller, role);
+  const expert = await createExpert(boundedCaller, role);
 
   // Step 3: Execute expert
   const expertTask = `Evaluate this model recommendation for the task: "${config.task}"\n\n` +
     `Recommended: ${delegation.recommended_model}\n` +
     `Reasoning: ${delegation.reasoning}`;
-  const expertResult = await executeExpert(caller, expert.expertId, expertTask);
+  const expertResult = await executeExpert(boundedCaller, expert.expertId, expertTask);
 
   // Build evaluation
   const evaluation: ModelEvaluation = {
@@ -178,7 +219,7 @@ export async function runShowdown(
 
   for (const strategy of strategies) {
     try {
-      const vote = await voteWithStrategy(caller, proposal, strategy);
+      const vote = await voteWithStrategy(boundedCaller, proposal, strategy);
       strategyResults.push(toStrategyResult(vote));
     } catch (e) {
       errors.push(`${strategy} vote failed: ${e instanceof Error ? e.message : String(e)}`);
